@@ -1,0 +1,1015 @@
+﻿Pre-Implementation Model   Validation Report- Next Best Conversation Saving Offer Model      (EDA-001-01)
+March 17, 2023
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+To:    Brent Lyman, Director,  Data Science
+CC:   Renee Oxley, Chief Risk Officer
+         Erin Stephen, Head of Risk Strategy & ERM
+Dan Semmens, sENIOR vp, Data and AI
+         Janka Coppens, Leader 11, Data Science 
+          Rhys Chouinard, Data Scientist 9, Data & AI
+          Katie Sadowski, Leader 9, Software Development
+          Fatima Damji, Principal Product Manager, Data & AI
+          Yukun Zhang, Data Governance Analyst 8, AI Governance
+          Omid Namaki, Lead Data Scientist, Data & AI
+          Rachel Shen, Data Scientist 7, Data & AI
+Model Information
+Model ID
+	EDA-001-01
+	Model Name
+	NBC Saving Offer Model
+	Model SSU
+	Data & AI
+	Model Rating
+	Medium
+	      Model Owner
+	Brent Lyman
+	Model User(s)
+	Recommender Agents and Decision Support  Squad( RADS) /Next Best Conversation (NBC) Front Line
+	Model Developer
+	Omid Namaki
+	Modeling Team Manager/Contact
+	Brent Lyman
+	Model Validation Type: Vetting/Initial Validation
+Vetting Rating:  Acceptable, but improvements required
+Model Validation Review and Approval
+Report Version
+	Principal Validator
+	Peer Review
+	Manager Review
+	Date Sent to Model Owner
+	Pre-Implementation
+	Marjan
+Rekabdar
+	N/A
+	Dongmei Wang
+	March 20, 2023
+	Note: A date indicates a completion of review/approval by the responsible Party
+________________
+Table of Contents
+1.0 Executive Summary        4
+2.0 Model Information        13
+2.1 Background        13
+2.2 Model Overview        14
+3.0 Elements of Validation        15
+3.1. Model Development Documentation        15
+3.2. Theoretical Construction and Model Design        16
+3.3. Data Assessment        18
+3.3.1. Profile Overview        19
+3.3.2. Performance Window Overview        19
+3.3.3. Data and Input Quality Assessment        21
+3.3.4. modeling data  Replication        25
+3.4. Segmentation        25
+3.5. Dependent and Independent Variable Selection        25
+3.5.1. Dependent Variable        25
+3.5.2. Independent Variable        27
+3.6. Model Mathematical/Statistical Tests        30
+3.6.1. Model Estimation and Results Review        30
+3.6.2. Model  Assumption        32
+3.6.3. Model Replication and Program Code Check        32
+3.7. Model Outcome Test        33
+3.7.1. Model Performance Test        33
+3.7.1.2  Model Performance Vs Other Models        39
+3.8. Model Application and Governance        41
+3.8.1. Access Control        41
+3.8.2. Model Execution        41
+3.8.3. Model Monitoring Plan        42
+3.8.4. Model Ethics        43
+3.8.5. Aggregate Risk        44
+4.0 Appendix I Definition of Validation Rating        44
+________________
+
+
+1. Executive Summary
+This document presents MRM’s independent validation of the Next Best Conversation (NBC) Saving Offer model. The model has been developed by the Data and Artificial Intelligence ( AI ) Team in December 2022 with the sole purpose to  Identify retail ATB customers who are most likely to take a short term saving product including Saving account, FDD or TFSA. This model is utilized in the Next Best Conversation tool designed to provide engagement and ATB saving product recommendation. Given the model impact and complexity,  the model is rated as a Medium risk model.
+
+
+The first generation of the Next Best Conversation model, which is in production now, was developed in 2018 in SAS using EDW. The model has been redeveloped due to the following reasons: 1) The current (old) model is a combined model in that all the different products which a customer can take-up are added into one modeling process. The new model makes all the offers modular i.e. build a separate model for each product recommendation. 2) To develop the current model, the data input from the last six month period was used. The new model  hopes to make better predictions by collecting 3 years of historical data. 3) The banks strategy to move off of SAS and legacy EDW and to drive all data to live in GCP Deep and models/coding to be python based. 
+
+
+The new ‘NBC Saving Offer’ model in GCP, which was developed in Python, is a machine learning (ML) model that uses the eXtreme Gradient Boosting (XGBoost) algorithm. The main data source to develop the model is the ‘pd-deep-prd’ and ‘ pd-deep-sat-05’ projects in GCP ( Google Cloud Platform), where the data is being pulled from the ’customer_dimension’ and ‘customer_metrics_monthly’ tables in ‘edmbv_ed_SEC’ dataset and ’customer_segmentation’ table in ‘advanced_ai_lob’ dataset . All retail customers (new and existing customers) who have at least one active account, not be an ATB ‘Private’ client and not be a Cashco client from Jun’ 2019 to Oct’ 2022 are selected in the model development process.
+
+
+The dependent variable (”Target”) is a binary flag defined as “1” if the client does not have a savings product in the previous month but has at least one savings product in the current month; otherwise the target is set to be “0” if the client does not have a savings product in the previous month and remains to not have a savings product in the current month. The independent variables cover a wide net of information about each client, including deposit account balances, transaction data, demographic profiles, Loan products and utilization, general business information and information about what type of account the business partner had, which are collected about all clients at a specific month. 
+
+
+To comply with the OSFI Guidelines on Model Risk Management[1] (September 2017) and ATB Model Risk Management Policy[2] and Framework[3]. The Model Risk Management Team (MRM) conducted independent validation on the model. The following exercises were conducted during the validation of the model:
+* Evaluation of model development document;
+* Reviewing and testing of modeling data and inputs;
+* Assessing model conceptual soundness and assumptions;
+* Testing and verifying model calculation;
+* Testing and verifying model output; 
+* Assessment of the adequacy of the model development process and risk controls;
+* Evaluating the model’s performance monitoring plan and model governance.
+
+
+During this validation, MRM has identified some issues with this model. MRM noticed that the model development team did not have UAT tests ( parallel test and User Acceptance Test) for this model. MRM highly recommends that the modeling team should do the UAT test before putting the model in the production. Several model documentation issues have also been identified.  Issues related to target variable design error and feature treatments have been closed after the modeling team fixed the errors before this report is finalized. 
+
+
+The conclusion of this vetting/initial validation is Acceptable, but improvements required. Therefore, the model is accepted for its intended use, but a UAT test is required before production.
+
+
+Table 1a provides a summary of the observations identified by MRM during the validation of the model. Table 1b lists the model’s limitations as identified by the model owner in model development documentation, along with any other limitations that MRM may have identified during the validation of the model. Table 1c lists the recommendations for future improvement from MRM identified during this model validation.
+
+
+Table 1a Summary of the Observation severity, Observation Description, and Remediation Timeline
+Observation #
+	Severity
+	Observation Description
+	Status 
+	Remediation Date
+	3.8.2
+	Medium
+	Model Execution
+* MRM noticed that the model development team did not have UAT tests ( parallel test and User Acceptance Test) for this model. MRM recommends that the modeling team should do the UAT test before putting the model in the production.
+	Open
+	
+
+	3.1
+	Low
+	Model development Documentation
+* Lack of information regarding the model  limitation 
+* In feature reduction technique pertaining to principal component analysis ( PCA), the feature with the smallest 1-R_square ratio have to be used to present its group. In model development documentation , the model owner mentioned the highest 1-R_square ratio was selected. MRM notes that this rule was followed by Model Owner in ‘NBC_Savings_model.ipynb’  code, but the model development documentation should be corrected.                                              
+* Per model development documentation, it seems that the model owner includes all new customers who already have a saving product at that time point of opening. Although MRM notes that  the modeling data construction code( ‘NBC_Savings_model_data_setup.ipynb’) is correct and exclude all new customers who already have a saving product at that time point of opening in Target=1 group, MRM highly recommends that the model documentation should be corrected and aligned with the code to show this exclusion 
+
+
+* Per ‘NBC_Savings_model_data_setup.ipynb’, MRM notes that ‘Deposit_business_account_balance’ ( converted to ‘business_deposit_balance’). The model documentation has to be corrected.
+	        Open                                                                             
+	
+
+	
+
+
+
+3.3.3.2
+
+
+
+
+
+
+
+
+	Medium
+	Data Assessment
+* MRM is the view that the ’has_atb_wealth_products’ has to be an exclusion criteria at the data preparation step. Per discussion with the modeling team, MRM is addressed that ’has_atb_wealth_products’ clients are not excluded from the saving offer model and the client-facing team are still encouraged to use the correct protocols when considering a client for this product. Therefore this observation is closed
+	
+
+
+
+
+
+
+
+Closed
+
+
+
+
+
+
+
+
+
+
+	Jan 26, 2023
+	3.3.3.1
+	Medium
+	Data Assessment
+* MRM notes that some variables like ‘is_non_resident’,  and ‘is_staff’ were dropped by the model owner during the model development process. MRM is of the view that these variables have to be  as exclusion criteria at the data preparation step, rather than drop them. Per discussion with the modeling team, MRM is addressed that ‘is_non_resident’ and ‘is_staff’ clients are not excluded from the saving offer model and the client-facing team are still encouraged to use the correct protocols when considering a client for this product. Therefore this observation is closed
+	Closed
+	Jan 26, 2023
+	3.3.4
+	High
+	Modeling Data Replication
+* MRM independently runs the modeling data construction code for the data creation used as input for the model building process. MRM did not succeed in replicating the final data since the modeling data  construction code( Jupyter notebook data exploration and modeling dataset creation ) to create Target=0 is not correct. The code has to be corrected and aligned with the model development documentation
+	Closed
+	Feb 17, 2023
+	
+
+
+
+
+
+
+
+3.6.3.b
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+High
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Model Building Code
+* MRM reviewed the code presented by the model owner and notes that although all the nonbinary variables have been normalized using the scikit-learn Normalizer module, the normalized values are not used in the model development process. Therefore MRM was not able to replicate the results including the model performance metrics. The code has to be corrected and aligned with the model development documentation. 
+	
+
+
+
+
+
+
+
+
+
+Closed
+
+
+
+
+
+
+
+
+
+
+
+
+	Feb 17, 2023
+	3.6.3a
+	High
+	Model Building Code
+* MRM reviewed the code presented by the model owner and notes that the code to create Target=0 is not correct. There are some clients ( 1433 ) in the training dataset and (752) in the test dataset who had a saving product in the previous month ( preceding_flag), but were not dropped. Per model documentation in modeling design, all customers with saving products in the previous month in both groups of ‘Target’=0 and ‘Target=1’ should be excluded. The code have to be corrected and aligned with the model development documentation
+	Closed
+	Feb 17, 2023
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  Table 1b A List of model Weakness/limitation and Recommendations for Future
+Model Limitation
+	Risk
+	Recommendation
+	The model is built on the historical data of 3 years and the model owner has assumed that a client who will uptake a short term saving product has a similar behavior or demographic profile to a client who already has opened a savings account in the recent past. The model development team also assumes that this holds true into the future.
+
+
+	There might be a potential decay in accuracy when it will be used to predict a new production data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	The model development team should adopt a regular model performance review and regular training of the model to mitigate this decay
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Potential changes in data sources in Deep 
+
+
+
+
+	It could affect the reproducibility of original modeling dataset so all aspect of the model could be affected
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+Table 1c - Recommendations for improvements to the New NBC Saving Offer Model
+S.No.
+	Recommendation/ Suggestion for improvement to the model 
+	1
+	MRM notes that Monotone constraints were not imposed on predictors during the model building process. As setting monotonic constraints can reduce overfitting and improve the model performance, MRM suggests that the model owner impose these constraints on  predictors during model fitting
+	2
+	MRM notes that the model ‘Explainability’ as part of the model ethics are not established where the model developer has not conducted comprehensive model explainability tests such as ‘Local interpretable model-agnostic explanation (LIME) and/or Leave-One-Covariate-Out (LOCO) as the industry common practice to understand how the model makes decisions for a single instance and explain the individual predictions. 
+	3
+	MRM suggests that the model owner conduct the model  ‘Stability’ test such as population stability index ( PSI ) indicating the population shift in the data period when this model was developed.
+	4
+	MRM recommends the modeling team to have a detailed model monitoring plan on model performance, to capture significant early warning signals in model performance deterioration and population shifts.
+	5
+	MRM highly recommends that the model owner ensures if all features in the final model make business sense.
+	6
+	MRM notes that the model owner dropped some features with dominant values ( >99% Zeros ) during the model development process. MRM highly recommends that the model owner ensures if these features are not informative features in the model building process. 
+	2. Model Information
+The Next Best Conversation (NBC) Saving Offer model has been developed to make predictions about whether an ATB retail customer will open a short term Savings product like a Savings account or FDD or TFSA. The model is utilized in the Next Best Conversation tool, designed to help the customer facing team members, to have more meaningful conversations and provide personalized recommendations with customers whose probability to uptake short term saving products are high.
+The new ‘NBC Saving Offer’ model in GCP, which was developed in Python, is a machine learning (ML) model that uses the eXtreme Gradient Boosting (XGBoost) algorithm. This new modular approach was scheduled to go into production during the first couple of weeks of January 2023 in which the legacy SAS NBC will be abandoned. Due to the timing of needing to replatform NBC into GCP, the model developer had to first rebuild all the models to meet the SAS decommissioning deadlines and then only submit the models for model validation. An exception request has been filed for all those models. 
+   1.     Background
+The first generation of the Next Best Conversation model, which was a  logistic regression model, was developed in 2018. The model was replaced with the new one  due to the fact that the current model is a combined model in that all the different products a customer can take-up are added into one modeling process, where the model ranks 8 offers (Chequing, Short term Savings, RSP,  Mortgage, Personal Loans, Mastercard, Wealth and Digital) based on the probability of taking an offer and the customer lifetime value that it adds to the baseline scenario to make a decision on which product is more suited to the client. The current design of NBC has made it difficult to scale to other client segments like business or Wealth, difficult to add in new product recommendations and is also unable to make bespoke recommendations using other channels like campaign emails or virtual assistant, so  it would then have required a complete rebuild every time  a new product recommendation is added.The new model makes all the offers modular i.e. build a separate model for each product recommendation making it much easier to make changes to an individual recommendation or to add more recommendations in the future. In addition, The new model  hopes to make better predictions by collecting 3 years of historical data to avoid potential seasonality of only using a specific month and capture the most minority cases as possible.
+   2. Model Overview
+The new ‘NBC Saving Offer’ model, which was developed by the Data and Artificial Intelligence ( AI ) Team in December 2022, is a machine learning (ML) model that uses the eXtreme Gradient Boosting (XGBoost) algorithm running in Python.
+
+
+The data used for the model development is from June'  2019 to Oct’ 2022 which is pulled from the ’customer_dimension’ and ‘customer_metrics_monthly’ tables in ‘edmbv_ed_SEC’ dataset at the ‘pd-deep-prd’ project  and ’customer_segmentation’ table in ‘advanced_ai_lob’ dataset at the  ‘ pd-deep-sat-05’ project in GCP . All retail customers (new and existing customers) who have at least one active account, not be an ATB ‘Private’ client and not be a ‘Cashco’ client are selected in the model development process.
+
+
+The design of the modeling data is to include all customers who have at least one savings product or not captured in at least one of these during a specific month but not have a savings product in the previous month. The dependent variable (”Target”) is a binary flag defined as “1” if the client does not have a savings product in the previous month but has at least one savings product in the current month. Otherwise the target is set to be “0” if the client does not have a savings product in the previous month and remains to not have a savings product in the current month.
+
+
+Per model development documentation, In the very first step of developing the model, the modeling team gathered 46 features. These features which are considered as independent variables are spanned across several dimensions, such as deposit account balances, transaction data, demographic profiles, Loan products and utilization, general business information and information about what type of account the business partner had, which are collected about all clients at a specific month. 
+
+
+The rational reason to choose these features is the belief that these features might aid predictions of whether customers would be interested in the saving product. To reduce the number of prospective model features to variables that hold the most predictive power, the modeling team employed exploratory analysis and removed those variables with majority of missing values or ‘Zero’. Considering some variables are highly correlated with one another, the model owner used ‘Feature Reduction Techniques’ done by ‘Principal Component Analysis’ (PCA) and ‘Random Forest Classifier’. The final model created by the model owner comprises 15 variables as the  independent variables (Table 3.5.2).
+
+
+The model assumption is that a Business Partner that will uptake a short term saving product  has a similar behavior or demographic profile to Business Partners that already has opened a savings account in the recent past. The model development team also assumes that this holds true into the future.
+
+
+MRM notes that the outputs from this model are not used in any model in the future.
+
+
+3. Elements of Validation
+   1.  Model Development Documentation
+A model development document titled ‘NBC Saving Recommendation Model’ was provided to MRM for the validation of the model. The model development document contains the model purpose, intended use, the target population definition (model development sampling), model design, dependent/ independent variable definition, the model assumption, the exclusion criteria utilized in the model building process and information regarding the model governance components including access control, model implementation, model monitoring plan and model ethics. Also, the model owner provided two Python codes including:
+
+
+* Code for the data creation used as input for the model building : ‘NBC_Savings_model_data_setup.ipynb’ 
+* Code containing the model build and design : ‘NBC_Savings_model.ipynb’
+
+
+MRM identified that there is a lack of information regarding the model  limitation ( Observation 3.1.1)
+
+
+Also, MRM notes some issues during the review of model documentation including:
+
+
+* In the feature reduction technique pertaining to principal component analysis ( PCA), the feature with the smallest 1-R_square ratio has to be used to present its group. In model development documentation , the model owner mentioned the highest 1-R_square ratio was selected. MRM notes that the correct rule was followed by Model Owner in ‘NBC_Savings_model.ipynb’ code, but the model development documentation should be corrected.
+
+
+* Per model development documentation, it seems that the model owner includes all new customers who already have a saving product at that time point of opening. Although MRM notes that the modeling data construction code( ‘NBC_Savings_model_data_setup.ipynb’) is correct and has excluded all new customers who already have a saving product at that time point of opening in Target=1 group, MRM recommends that the model documentation should be corrected and aligned with the code to show this exclusion.
+
+
+* Per ‘NBC_Savings_model_data_setup.ipynb’, MRM notes that ‘Deposit_business_account_balance’ ( converted to ‘business_deposit_balance’). The model documentation has to be corrected.
+ 
+   2. Theoretical Construction and Model Design 
+The Next Best Conversation (NBC) Saving Offer model has been developed to make predictions about whether an ATB retail customer will open a short term savings product like a Savings account or FDD or TFSA. MRM notes that the model methodology does not do a forward looking prediction of outcomes but compares differences in behaviors of two subset groups of customers to make predictions.
+
+
+The model owner uses  XGBoost as an implementation of GBM by adding regularized model formalization to control over-fitting plus the system and algorithm optimization to achieve a faster running speed. It differs from the GBM in that it adds in a regularization component in its loss function, by iteratively approximating the loss function with a quadratic one similar to Newton’s method in optimization, and several other important algorithmic optimizations that makes it scalable to large scale of data. The innovations include: a novel tree learning algorithm for handling sparse data, a theoretically justified weighted quantile sketch procedure that enables handling instance weights in approximate tree learning, and also the parallel and distributed computing that makes learning faster.
+
+
+XGBoost has recently proved superior to other ML techniques such as  Random Forest and Deep Neural Networks (DNN)[4]. In particular, the XGBoost library is intended to handle missing values and large datasets. XGBoost dominates tabular datasets on classification and regression predictive modeling. Evidently, it is the go-to algorithm for Kaggle[5] competition winners. MRM deems the application of XGBoost algorithm reasonable and acceptable.
+
+
+This XGBoost model building process involves the  following steps : 
+
+
+1. The overall data from June 2019 to Oct’ 2022 pulled from the ’customer_dimension’ and ‘customer_metrics_monthly’ tables in ‘edmbv_ed_SEC’ dataset at the ‘pd-deep-prd’ project  and ’customer_segmentation’ table in ‘advanced_ai_lob’ dataset at the  ‘ pd-deep-sat-05’ project in GCP, is used for model development. All retail customers who have at least one active account, not be an ATB ‘Private’ client and not be a ‘Cashco’ client  are selected in the model development process. 
+2. As  mentioned, the modeling data  design is to include all customers who have at least one savings product or not captured in at least one of these during a specific month but not have a savings product in the previous month.The dependent variable (”Target”) is a binary flag defined as “1” if the client does not have a savings product in the previous month but has at least one savings product in the current month. Otherwise the target is set to be “0” if the client does not have a savings product in the previous month and remains to not have a savings product in the current month.
+3. Gathering 46 features. These features which are considered as independent variables are spanned across several dimensions, such as deposit account balances, transaction data, demographic profiles, Loan products and utilization, general business information and information about what type of account the business partner had, which are collected about all clients at a specific month. 
+4. Reducing the number of prospective model features to variables that hold the most predictive power. As mentioned, The modeling team employed exploratory analysis and removed those variables with majority of missing values or zero, then dropped those variables that are highly correlated with one another using ‘Feature Reduction Techniques’ done by ‘Principal Component Analysis’ (PCA) and ‘Random Forest Classifier’. The final model created by the model owner comprises 15 variables as the  independent variables
+5. The hyperparameters of the model were tuned using random search on the full timeframe from 2019-06-30 until 2022-10-31 ( 3 years) as the training set in the model building process .
+6. Out of time testing (test set) is the cohort month ‘2022-11-30’ ( one month ) in order to measure the model performance. 
+
+
+   3. Data Assessment
+Per the model documentation, input to the model is only ATB retail customers (new and existing customers) information, which consists of deposit account balances, transaction data, demographic profiles, Loan products and utilization, general business information and information about what type of account the business partner had. The data was collected from June 2019 to Oct’ 2022 and extracted from the ’customer_dimension’ and ‘customer_metrics_monthly’ tables in ‘edmbv_ed_SEC’ dataset at the ‘pd-deep-prd’ project  and ’customer_segmentation’ table in ‘advanced_ai_lob’ dataset at the  ‘ pd-deep-sat-05’ project in GCP. To validate the ‘NBC Saving Offer’ Model, the 'train_saving_model_creation_MRM' and 'test_saving_model_creation_MRM' were used ( Both were created by MRM after correcting the ‘NBC_Savings_model_data_setup.ipynb’  code). 
+MRM notes that the inclusion/ exclusion criteria was considered for some special types of clients as follows:
+* Only focus on ATB retail clients (Person and in SAP)
+* Clients should at least be 18 years old
+* Clients should have at least one active account
+* Clients should not be deceased
+* Clients should no be a Cashco client
+* Client should not currently have a short to medium term savings product
+* Client should not be an ATB Private Client (these clients could benefit from a more specialized investment product and should not be offered the generic Savings, FDD or TFSA products)
+
+
+      1. Profile Overview
+Figure 3.3.1 shows the monthly retail customer base over the last 5  years (January 2018 until November 2022) and shows what proportion of the customer base has any savings account and the breakdown per savings account type (namely efs savings, TFSA and FDD). As we can see during the last 5 years the customer base only slightly increased however the percentage of clients who have efs savings increased from 40% to around 50%. In addition, the Figure below shows that  the blue and black line representing any savings and the efs savings have the same trend meaning that if a client has a TFSA or a FDD they typically also have a efs savings product. Moreover, the Figure also depicts that during July 2018, there appears to be a drop in the base but it recovers back to the expected levels by April 2019.
+Figure 3.3.1:  Historical Customers Overview 
+  
+
+      2. Performance Window Overview
+Figure 3.3.2a shows the one month performance window of clients who did not have any savings product the previous month but has at least one savings product the following month over time. The adoption rates after one month seems to stabilize in the last few years but shows an outlier for the April 2019 time period which coincide with the drop down and recovery from the previous graph.
+Figure 3.3.2b shows that if the modeling data construction code runs using data from June 2019 onwards, the adoption rates  are between 0.25% and 0.42%.
+
+
+Figure 3.3.2a:  Historic view of clients who did have any savings product adoption rate after one month   
+Figure 3.3.2b:  Historic view of clients who did have any savings product adoption rate after one month ( from June 2019 onwards)
+   
+      3. Data and Input Quality Assessment
+MRM reviewed the modeling data construction code for the data creation used as input for the model building process. 
+MRM notes that the following instances in modeling data  design:
+* The same client could appear in multiple month cohorts up until the client either adopts a savings product or remains until the end of the model time period (2022-10-31). 
+* The clients, who are new  and do not have previous month information (preceding_flag= Null), will be treated with status as a 0 in the preceding month. The model owner is of the view that they did not have a savings account with ATB in the preceding month. 
+* All new customers who already have a saving product at that time point of opening in Target=1 group were excluded from the model development process.
+* The unique indicator is month_end ( the time variable when the client shows up) combined with customer_id, meaning that if the same client appears in multiple months, there could be a different behavior noted within the different months (e.g. lifestage change). Therefore, these clients are treated as separate instances and not removed from the dataset.
+* The clients could have a saving product a few months ago and then closed it again thus not showing as having  a saving product in recent months. Due to the definition of the ‘unique indicator’ variable, these clients are treated as separate instances.
+* The clients, who adopted a saving product; e.g. 4 years ago, and in between that time closed their saving product and opened up a new one later down the line, are also treated as separate instances and not removed from the dataset. 
+
+
+Moreover, MRM notes the following treatments were considered to calculate the data used as input for the model building: 
+
+
+1. The first entry that a client takes up a savings product throughout the time frame was kept in the ‘Target=1’ group.
+2. To combat the severe class imbalance an undersampling technique was used on the majority class ( Target=0) as follows:
+* only taking the most recent information of a client across all his available cohort months.
+* only keep clients who never took up a savings product during the time frame ( show up in ‘Target=1 group )
+3. The ‘number_of_active_accounts’ variable is binned into {1,2,3,4+}, namely ‘number_of_active_accounts_grouped’.
+4. All product holding types are transformed into a binary classification; e.g. rsp_account_count to become has_rsp_account.
+5. Some non-binary numerical features contain missing values. The model owner imputed the missing value with zero and created a new feature postfixed with feature name and then _NA to indicate if that feature had a missing entry at that row or not. This will be done for the following features:
+* revolving_loans_utilization_rate ( Missing= 48.3%)
+* revolving_loans_authorization_limit ( Missing= 48.3% )
+* revolving_loans_value ( Missing= 48.3% )
+* revolving_loans_count ( Missing= 43.5% )
+* mortgage_loans_utilization_rate ( Missing= 71.8% )
+* mortgage_loans_authorization_limit ( Missing= 71.8% )
+* mortgage_loans_value ( Missing= 71.8% )
+* mortgage_loans_count ( Missing= 43.5%)
+* installment_loans_utilization_rate ( Missing= 76.7%)
+* installment_loans_authorization_limit ( Missing= 76.7% )
+* installment_loans_value ( Missing= 76.7%)
+* installment_loans_count ( Missing= 43.5% )
+* share_of_deposits_in_joint_accounts ( Missing= 65.6% )
+* active_banking_transactions_count ( Missing= 62.4% )
+
+
+Then, a normalization transformation is considered to account for all non-binary variables including:
+* share_of_deposits_in_joint_accounts
+* rsp_account_balance
+* checking_account_balance
+* loan_account_balance
+* revolving_loans_utilization_rate
+* tenure
+* mortgage_account_balance
+* mastercard_account_balance
+* mortgage_loans_utilization_rate
+* mortgage_loans_authorized_limit
+* loan_loc_account_balance
+* revolving_loans_authorized_limit
+* mortgage_loans_value
+* revolving_loans_count
+* installment_loans_count
+* mortgage_loans_count
+* installment_loans_value
+* revolving_loans_value
+* installment_loans_authorized_limit
+* installment_loans_utilization_rate
+* active_banking_transactions_count
+
+
+6. One hot encoding ( the creation of a new set of dummy ( binary) variables that is equal to the number of categories in the variable)  for all categorical variables like ‘Age_group’, ‘number_of_active_accounts_grouped’ and ‘psyte_hd_cluster’.
+7. ‘Tenure’ variable has missing values (0.1%). Those records  are dropped as the customer whose customer_account_holder_as_of is missing(which is used to calculate tenure) should not be included.
+8. The ‘has_equifax_das_data’ variable  is either 1 or Missing (42.9%).  The missing was replaced with zero, so it would translate to having equifax DAS data for the client (1) or not (0).
+9. MRM also notes that some variables are merged to create a new variables as follows:
+* ‘deposit_efs_saving_account_count’ and ‘tfsa_account_count’ and ‘fdd_account_count’ ( converted to ‘has_any_saving_account’)
+* ‘Deposit_business_account_balance’ ( converted to ‘business_deposit_balance’)
+* ‘Loan_heloc_account_balance’ and ‘loan_personal_loc_account_balance’ ( converted to ‘loan _loc_account_balance’)
+* ‘loan_agriculture_account_balance’ and ‘loan_commercial_account_balance’ and ‘loan_ibl_account_balance’ and ‘loan_letter_of_credit_account_balance’ (converted to ‘business_loan_balance’)
+During the modeling data review, MRM has also identified some issues with the following  modeling data treatment: 
+
+
+1. MRM notes that some variables like ‘is_non_resident’,  and ‘is_staff’ were dropped by the model owner during the model development process. MRM is of the view that these variables have to be  as exclusion criteria at the data preparation step, rather than drop them during the model development process. Per discussion with the modeling team, MRM is addressed that ‘is_non_resident’ and ‘is_staff’ clients are not excluded from the saving offer model and the client-facing team are still encouraged to use the correct protocols when considering a client for this product. Therefore this observation is closed ( Observation 3.3.3.1).
+2. MRM is the view that the ’has_atb_wealth_products’ has to be an exclusion criteria at the data preparation step. Per discussion with the modeling team, MRM is addressed that ’has_atb_wealth_products’ clients are not excluded from the saving offer model and the client-facing team are still encouraged to use the correct protocols when considering a client for this product. Therefore this observation is closed ( Observation 3.3.3.2).
+        
+      4. Modeling Data  Replication
+MRM independently runs the modeling data construction code for the data creation used as input for the model building process. MRM did not succeed in replicating the final data since the modeling data construction code( Jupyter notebook data exploration and modeling dataset creation ) to create Target=0 is not correct ( it will be discussed later in section 3.6.3 - observation 3.6.3a ). The code has to be corrected and aligned with the model development documentation ( Observation 3.3.4). This observation was closed as the modeling data code was corrected ( Closed ).
+   4. Segmentation
+The Next Best Conversation (NBC) Saving Offer model has been developed to make predictions about whether an ATB retail customer will open a short to medium term saving product like a savings account or FDD or TFSA. Therefore the segmentation is limited to the saving product such as ‘EFS saving’, TFSA and FDD. MRM notes that the model development team had a segmentation test to confirm these products can be combined together as the saving products. As mentioned in section 3.3.1, Figure 3.3.1 shows that clients, who have a TFSA or a FDD, typically also have a efs savings product.
+
+
+   5. Dependent and Independent Variable Selection
+      1. Dependent Variable
+The dependent variable (”Target”) is a binary flag defined as “1” if the client does not have a savings product in the previous month but has at least one savings product in the current month; otherwise the target is set to be “0” if the client does not have a savings product in the previous month and remains to not have a savings product in the current month. 
+
+
+As it will be discussed later in section 3.6.3, MRM notes that the modeling data construction code( ‘NBC_Savings_model_data_setup.ipynb’ ) to create Target=0 is not correct. There are some clients ( 1433 ) in the training dataset and (752) in the test dataset who had a saving product in the previous month ( preceding_flag), but were not dropped ( Table 3.5.1.b  and Table 3.5.1.c ). Per model documentation in modeling design, all customers with saving products in the previous month in both groups of ‘Target’=0 and ‘Target=1’ should be excluded (Observation 3.6.3a ( Closed)). Summary statistics of the ‘Target’ variable created by MRM  was presented below (Table 3.5.1.a) . 
+
+
+Table 3.5.1.a: Summary Statistics for Response Variable - June'  2019 to Nov’ 2022 by MRM
+Model_Usage
+	Having A Saving Product Frequency
+	Total Client
+	Percent
+	Testing
+	1269
+	330506
+	0.4%
+	Training
+	47650
+	463820
+	10.27%
+	
+
+Table 3.5.1.b: Distribution of Response Variable on Training Dataset  by MRM
+has_any_Savings_account 
+	preceding_flag
+	nr_clients
+	0
+	0
+	414042
+	0
+	1
+	1433
+	0
+	NULL
+	2128
+	1
+	0
+	47650
+	
+
+Table 3.5.1.c: Distribution of Response Variable on Test Dataset  by MRM
+has_any_Savings_account 
+	preceding_flag
+	nr_clients
+	0
+	0
+	327454
+	0
+	NULL
+	1785
+	0
+	1
+	752
+	1
+	0
+	1269
+	
+
+                                               
+      2. Independent Variable
+Per model development documentation, In the very first step of developing the model, the modeling team gathered 46 features. These features which are considered as independent variables are spanned across several dimensions, such as deposit account balances, transaction data, demographic profiles, Loan products and utilization, general business information and information about what type of account the business partner had, which are collected about all clients at a specific month.
+
+
+To reduce the number of prospective model features to variables that hold the most predictive power, the modeling team employed exploratory analysis and removed those variables with majority of missing values or ‘Zero’, then those variables which are highly correlated with one another were dropped using ‘Feature Reduction Techniques’ which was done by ‘Principal Component Analysis’ (PCA) and ‘Random Forest Classifier’. 
+
+
+The following step summarize the independent variables list excluded in different steps due to different reasons:
+
+
+* Some variables such as 
+* has_stakeholder_role
+* has_atb_business_products
+* has_fdd_maturing_within_six_month
+* has_loan_dueto_refinance_within_six_month
+* open_plan_loans_utilization_rate
+* open_plan_loans_authorized_limit
+* open_plan_loans_value
+* is_non_resident 
+* pays_bill_outof_chequing_account
+* is_staff
+* open_plan_loans_count
+* business_deposit_balance
+* business_loan_balance
+were excluded due to a large portion of missing values or ‘Zero’ ( more than 99% missing values or zero).
+
+
+* The heatmap below ( Figure 3.5.2) depicts the existence of correlated features. MRM notes that the model owner used the first feature reduction technique to select one feature from a group of features that best represent the group. This will be done using variable clustering which calculates the following three parts namely Principal Component Analysis (PCA), Eigenvalues and Communalities and 1 – R_Square Ratio. The feature with the smallest 1 – R_Square Ratio will be used to represent its group and the Eigenvalue cut-off has been set at 80%. Having too many irrelevant features can introduce noise into a model resulting in poor performing machine learning models. The features were further reduced by doing a ‘random forest classifier’ with scit-learns feature selection. The final model created by the modeling team comprises 15 variables as the  independent variables (Table 3.5.2). 
+
+
+The modeling team provided the list of all 46 features, the original data and the code pertaining to this section . MRM could not replicate the features selection process on all 46 features to select the most predictive features as : 
+
+
+* Dataset pertaining to Target=0 is not correct ( Observation 3.6.3a ( Closed) ). 
+
+
+* Although all the nonbinary variables have been normalized using the scikit-learn Normalizer module, the normalized values are not used in the model development process ( Observation 3.6.3b ). 
+
+
+
+
+Table 3.5.2.  The final Model Features- Model Owner Vs MRM
+Final Model Features by Model Owner
+	Final Model Features by MRM
+	revolving_loans_count_NA
+	revolving_loans_count_NA
+	-
+	number_of_active_accounts_grouped_4+
+	revolving_loans_authorized_limit
+	revolving_loans_authorized_limit
+	mortgage_account_balance
+	mortgage_account_balance
+	share_of_deposits_in_joint_accounts_NA
+	share_of_deposits_in_joint_accounts_NA
+	-
+	psyte_hd_cluster_None
+	-
+	installment_loans_count
+	number_of_active_accounts_grouped_3
+	number_of_active_accounts_grouped_3
+	-
+	revolving_loans_utilization_rate
+	rsp_account_balance
+	rsp_account_balance
+	-
+	share_of_deposits_in_joint_accounts
+	mastercard_account_balance
+	mastercard_account_balance
+	number_of_active_accounts_grouped_2
+	number_of_active_accounts_grouped_2
+	active_banking_transactions_count_NA
+	active_banking_transactions_count_NA
+	-
+	age_group_18_24
+	active_banking_transactions_count
+	active_banking_transactions_count
+	checking_account_balance
+	checking_account_balance
+	loan_loc_account_balance
+	loan_loc_account_balance
+	has_loan_loc_account
+	-
+	tenure
+	-
+	has_mastercard_account
+	-
+	
+
+Figure 3.5.2.  Heatmap plot showing the Spearman’s correlation of the model features 
+  
+
+
+
+   6. Model Mathematical/Statistical Tests
+      1. Model Estimation and Results Review
+MRM reviewed the procedure for estimating the new NBC saving offer model with the XGBoost machine learning algorithm. In order to estimate the model, optimal hyperparameters needed to be established.
+
+
+MRM notes that the modeling team does provide adequate detail pertaining to the step-by-step explanation of procedures for achieving optimal hyperparameters in the model development documentation and in the model training code - ‘NBC_Savings_model.ipynb’
+
+
+Per ‘NBC_Savings_model.ipynb’ model building code, the optimal hyperparameters for the XGboost model was found through Random Search. Random Search is where a list of hyperparameters is given and random combinations are used to train the model and the performance for each combination is recorded and the combination with the best performance is selected. MRM notes that the ‘Recall’ performance metric  for tuning the hyperparameter of the model was used. Due to the fact that the dataset was unbalanced, MRM deems it acceptable.
+
+
+Replicating the model optimal hyperparameters is not established fully by MRM ( Observation 3.6.3a and 3.6.3b)(Closed after the codes are corrected). The table 3.6.1 below shows the model optimal hyperparameters created by the modeling team and MRM respectively.
+
+
+Table 3.6.1:  Model optimal hyperparameters 
+Hyperparameter
+	 Model Owner
+	MRM
+	colsample_bytree
+	1
+	0.9
+	gamma
+	0
+	1
+	max_depth
+	3
+	4
+	min_child_weight
+	1
+	2
+	n_estimators
+	100
+	100
+	scale_pos_weight
+	100
+	100
+	subsample
+	1
+	1
+	      2. Model  Assumption
+As mentioned at section 2.2 , the assumption is that a Business Partner that will uptake a short term saving product  has a similar behavior or demographic profile to Business Partners that already has opened a saving account in the recent past. The model development team also assumes that this holds true into the future.
+As the model is built on the historical data of 3 years and there might be a potential decay in accuracy when it will be used to predict a new production dataset. MRM recommends that a regular model performance review and regular training of the model should be scheduled to mitigate this decay. 
+
+
+      3. Model Replication and Program Code Check
+As mentioned in section 3.1, MRM was presented with 2 different codes related to the new NBC Savings Offer model by the model owner. The  information pertaining to the Python and library versions used by the modeling team, when the model was built, was documented (Table 3.6.3.a). 
+
+
+Table 3.6.3.a: Python and library versions
+Programming Language/Package
+	Model Owner Version
+	MRM Version
+	Python
+	3.7.10
+	3.7.12
+	Numpy
+	1.21.1
+	1.21.1
+	Pandas
+	1.3.5
+	1.3.5
+	XGBoost
+	1.4.2
+	1.4.2
+	Sklearn
+	1.0.2
+	1.0.2
+	
+
+1. ‘NBC_Savings_model_data_setup.ipynb’ Code for the dataset creation used as input for the model building : This code is used to generate the dataset used in the following Python code ( ‘NBC_Savings_model.ipynb’). The code also contains a section pertaining to undersampling approach and exploratory data analysis. 
+
+
+* MRM Remarks on NBC_Savings_model_data_setup.ipynb:
+MRM reviewed the code presented by the model owner and notes that the code to create Target=0 is not correct. There are some clients ( 1433 ) in the training dataset and (752) in the test dataset who had a saving product in the previous month ( preceding_flag), but were not dropped. Per model documentation in modeling design, all customers with saving products in the previous month in both groups of ‘Target’=0 and ‘Target=1’ should be excluded. The code has to be corrected and aligned with the model development documentation ( Observation 3.6.3a).This observation was closed as the modeling data code was corrected( closed).
+
+
+2. ‘NBC_Savings_model.ipynb’ Code containing the model build and design : The main Python code used for data cleaning & pre-processing, development of the new NBC Savings Offer model and model performance testing against  logistic model. The code also contains a section pertaining to variable selection using  ‘Principal Component Analysis’ (PCA) and ‘Random Forest Classifier’ method and hyperparameter tuning 
+
+
+* MRM Remarks on NBC_Savings_model.ipynb:
+MRM reviewed the code presented by the model owner and notes that although all the nonbinary variables have been normalized using the scikit-learn Normalizer module, the normalized values are not used in the model development process. Therefore MRM was not able to replicate the results. The code has to be corrected and aligned with the model development documentation ( Observation 3.6.3b).This observation was closed as the modeling data code was corrected(Closed).
+
+
+   7. Model Outcome Test 
+      1. Model Performance Test
+The model performance metrics used by the model owner in evaluating the model performance were ‘Recall’ , ‘Confusion Matrix’, ‘Precision/Recall’ Curve, 'ROC' Curve and  Lift Score/Chart. 
+
+
+* Precision is a measure of result relevancy, while recall is a measure of how many truly relevant results are returned. High precision relates to a low false positive rate, and high recall relates to a low false negative rate. The precision-recall curve shows the tradeoff between precision and recall for different thresholds and a high AUC for the PR curve illustrates high precision and recall.  
+Precision (P) is defined as the number of true positives (TP) over the number of true positives plus the number of false positives (FP)
+            
+Recall (R) is defined as the number of true positives (TP) over the number of true positives plus the number of false negatives (FN)
+            
+Precision-Recall does not account for true negatives (as TN is not a component of either Precision or Recall), PR AUC is typically more robust when there are many more negatives than positives (a characteristic of class imbalance problem). Per model development documentation, the modeling team intends to optimize the ‘Recall’ metric to ensure that the greatest number of clients whom we can target for a savings product. This does translate to a higher number of false positives but they aim to capture as many of the target clients as possible ( Table 3.7.1a and 3.7.1b and Figure 3.7.1a). Table 3.7.1a shows that the ‘Recall’ metric is equal to 68% and 99% in majority and minority class respectively.
+ 
+* In the context of classification, Lift compares model predictions to randomly generated predictions. In other words, it indicates what is the chance of finding positives (goods) in our selection based on the model and how does it compare to finding them on a random basis?
+
+
+The comparison of success ratio using our model and random selection is the Model Lift and the higher the lift the more our model will distinguish between curated selection vs random selection.
+             
+            where the
+             
+             and
+
+
+
+In marketing the majority of campaigns target only a narrow group of clients (who are most open to adopt our recommendations) thus the main focus should be to understand how the model performs within that group. Performance outside of this group is irrelevant. The great thing about ‘Model Lift’ is that the financial value to the model could be assigned immediately. ‘Model Lift’ is basically a Return on Investment (ROI), where investment is the model which has been built ( Table 3.7.1c and  Figure 3.7.1b). Based on Table 3.7.1c result, if you only target users with a predicted rate  higher than 0.9 ( the top 10% of the client base in order of their likelihood to adopt) we could expect to catch nearly 8 times more savings product customers than we would by targeting the same number of people randomly
+* The ROC curve is an evaluation metric for binary classification problems. It is a probability curve that plots the true positive (TPR) against the false positive rate (FPR) at various threshold values and essentially separates the ‘signal’ from the ‘noise’. The AUC is the measure of the ability of a classifier to distinguish between classes and is used as a summary of the ROC curve. The higher the AUC, the better the performance of the model at distinguishing between the positive and negative classes. The ROC  is used typically when the classes are roughly equally balanced ( Figure 3.7.1c) . 
+
+
+As mentioned in section 3.2, the model was trained on the full timeframe from 2019-06-30 until 2022-10-31, then the final model performance was tested based on the hold-out sample data (out of time testing - test set), which is the cohort month ‘2022-11-30’ ( one month ) with original class imbalance.
+
+
+As mentioned in section 3.6.3, the code to create Target=0 is not correct ( observation 3.6.3a ( Closed) ) and the normalized values are not used in the model development process ( observation 3.6.3b ). MRM independently ran the modeling data construction code for the data creation and the model building code after correction of the codes and evaluated the model performance. Although MRM could not replicate the model performance result as of aforementioned issue, MRM is of the view  that the model has good performance based on the test results.
+
+
+
+
+
+
+
+
+
+
+Table 3.7.1.a: Classification Report for XGBoost Model - by MRM
+  
+
+
+
+Table 3.7.1.b: Confusion Matrix for XGBoost Model - by MRM
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Figure 3.7.1.a : Precision- Recall Curve for  XGBoost Model- by MRM
+  
+
+
+
+Table 3.7.1.c: Lift Score for XGBoost Model - by MRM
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Figure 3.7.1.b : Lift Chart for  XGBoost Model- by MRM
+  
+
+
+
+Figure 3.7.1.c : ROC Curve  for  XGBoost Model- by MRM
+  
+
+
+
+ 3.7.1.2  Model Performance Vs Other Models
+The model development team analyzed the performance of the new NBC Savings Offer model against logistic regression. Logistic regression was chosen as the base model since the SAS NBC Model made use of logistic regression which makes this a good model to use for comparison. 
+
+
+Table 3.7.1.2 shows Performance Metrics comparing Logistic Regression Model  Vs XGBoost Model accomplished by MRM. Based on Table 3.7.1.2 result, MRM is of the view  that the XGBoost model has better performance rather than logistic regression when comparing the top decile ‘Lift Score’ of 7.57 vs 6.63 and ‘Recall’ metric of 99% vs 38% in the minority group ( Target =1). In addition, the XGBoost model provides an increase in the number of ‘False Positive’ and  captures as many of the target clients as possible.
+
+
+Table 3.7.1.2: Performance Metrics -  Logistic Regression Model  Vs XGBoost Model - by MRM
+Model
+	Logistic Regression
+	Optimized XGBoost
+	Classification Table
+	  
+
+	  
+
+	Confusion Matrix
+	
+
+  
+
+	  
+
+	Precision/Recall Curve
+	  
+
+
+
+	  
+
+	ROC Curve
+	  
+
+	  
+
+	Lift Chart
+	  
+
+	  
+
+	Lift Score
+	  
+
+	  
+
+	
+
+
+
+
+
+   8. Model Application and Governance
+      1. Access Control
+Per model development documentation, the Model in production can not be accessed. If a change is needed to be made to the model in production a Change Request needs to be logged and a document stating the changes and containing the UAT results is to be submitted. The AI Platform team then creates the change request ticket and the production environment owner and the RADS team owner needs to approve the change. Production changes are then scheduled and production UAT results are to be saved in the change request ticket before the ticket can be closed.
+The model training data is stored in the satellite directory pd-deep-sat-05 to which only a select number of data scientists have access to. The team agreed upon using the dataset called 'model_build_artifacts' to store model building tables only. The model itself is stored in a GCP storage bucket and the model is date and time stamped so that it can not be overwritten accidently.
+
+
+      2. Model Execution
+Per model development documentation, the model execution code for the saving offer model can be found in this repo. Below is an architectural overview of how the model will be executed as part of the overall NBC ecosystem. MRM noticed that the model development team did not have UAT tests ( parallel tes and User Acceptance Test) for this model. MRM recommends that the modeling team should do the UAT test before putting the model in the production( Observation 3.8.2).
+
+
+  
+
+ 
+The Model is locally developed and then the input features used in the model scoring should undergo the SQL Promotion process so that the input features are available in production (updated daily) followed by the ML promotion process (MLSS) that will use the input features in production to score the clients (daily). It will then apply daily treatment and control groups and in real time exclude clients to whom the offer has already been made recently for and rank the offers for the use of Unleashed to consume a list of potential offers for a client. The resulting output is an API call. All feedback and scores are written back into the Deep production environment.
+The model has been tested in non-production and in production and the results are listed in this Change Request Document link.
+
+
+      3. Model Monitoring Plan
+Per model development documentation, on-going monitoring will be scheduled on demand. Outcome analysis will include input data drift, model drift and monitoring NBC users and customer’s response to the recommendation and adoption rate measurement. The details of the monitoring plan and process is currently under development and will be completed in 2023.
+
+
+      4. Model Ethics 
+The model is used as a way to identify customers with whom to start a conversation about opening a Saving account. As it is not an automatic account opening process and a customer still has to go through the same process as a customer walking into a branch to open a Saving account, direct adverse impacts on customers will be very limited. Nevertheless, MRM checked this model against the  model ethics principles - Fairness, safety, Robustness, Transparency, Explainability, Accountability.
+
+
+Per model development documentation, the data scientist teams await the best practices guidelines before doing an in-depth ethics and bias review. Until such time the use of our own Ethics and Bias Checklist will be utilized and can be found using this link.
+* Fairness: Although the model uses sensitive features such as ‘Age’. The model considers all ATB customers equally and no pre-selection is done prior to the training set and all customers make up the training set. MRM was informed that the model is slightly biased towards younger customers. 
+
+
+* Safety: Modeling data for this model is from the ATB GCP system  with good data protections. MRM was informed that Only NON-PII ( NON- Personally identifiable information) data is sent to Frequency Foundry (NBC Front End).
+
+
+* Robustness: This model will be saved and will be operated on the ATB GCP system which should have adequate security protection from adversarial attacks.
+
+
+* Transparency: This model is well documented with detailed model development information such as, model design, modeling code, testing results.
+
+
+* Explainability: Model developer has not conducted comprehensive model explainability tests such as ‘Local interpretable model-agnostic explanation (LIME)[6] and/or Leave-One-Covariate-Out (LOCO) to understand how the model makes decisions for a single instance and explain the individual predictions.
+
+
+* Accountability: On-going monitoring will be scheduled on demand. Outcome analysis will include monitoring NBC users and customer’s response to the recommendation and adoption rate measurement.
+
+
+      5. Aggregate Risk
+The model output is utilized in the Next Best Conversation tool, designed to help the customer facing team members, to have more meaningful conversations and provide personalized recommendations with customers whose probability to take Savings accounts are high.
+Per model development documentation, The outputs from this model are not used in any model in the future.
+4.  Appendix I Definition of Validation Rating
+1. Acceptable – the Model is acceptable for its intended use.
+2. Acceptable, but improvements required – The Model is accepted for its intended use, but the improvements to the Model or Model development process are required to be improved.
+3.  Acceptable if remediated – The Model development process is acceptable if the remediation actions are taken within an agreed acceptable time period.
+4. Unacceptable – the Model is not acceptable for the intended Model use.
+
+
+                       
+
+
+Model Risk Management  |  NBC Saving Offer Model  |  Confidential 
+
+
+________________
+[1]Enterprise-Wide Model Risk Management for Deposit-Taking Institutions: http://www.osfi-bsif.gc.ca/Eng/fi-if/rg-ro/gdn-ort/gl-ld/Pages/e23.aspx
+[2]Model Risk Management Policy: http://community.insideatb.net/resources/policies/Documents/model-risk-management-policy.pdf
+[3]Model Risk Management Framework: http://community.insideatb.net/resources/policies/Documents/model-risk-management-framework.pdf
+[4] https://www.researchgate.net/publication/337048557_A_Comparative_Analysis_of_XGBoost
+[5] Kaggle is a platform for predictive modeling and analytics competitions in which statisticians and data miners compete to produce the best models for predicting and describing the datasets uploaded by companies and users
+[6] https://www.mdpi.com/2504-4990/3/3/27/htm
